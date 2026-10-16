@@ -150,7 +150,7 @@ tick([{ type: 'Fire', held: true }])
 tick([{ type: 'Fire', held: false }])
 ticks(2)
 check('a new Space press still fires', cues.some((c) => c.cue === 'fire'))
-check('level 1 with 3 lives', w.main.gamedat[0].level === 1 && w.main.gamedat[0].lives === 3)
+check('level 1 with 5 lives', w.main.gamedat[0].level === 1 && w.main.gamedat[0].lives === 5)
 saveBmp('03-level1')
 
 const x0 = w.digger.diggerx
@@ -169,11 +169,11 @@ check('nothing moves while paused', engine.frame().version === frozen)
 tick([{ type: 'Start' }])
 check('any key resumes', engine.phase === 'playing' && stage() === 'live')
 
-const lives = w.main.gamedat[0].lives
+w.main.gamedat[0].lives = 3
 cues.length = 0
 w.scores.addscore(20000 - w.scores.score1)
 cues.push(...engine.takeSoundCues())
-check('extra life at 20000', w.main.gamedat[0].lives === Math.min(5, lives + 1) && cues.some((c) => c.cue === 'oneUp'))
+check('extra life at 20000', w.main.gamedat[0].lives === 4 && cues.some((c) => c.cue === 'oneUp'))
 
 // ── all eight maps: clear by emeralds, levplan 12345678 then 678, 5... ───────
 const plans = [w.main.levplan()]

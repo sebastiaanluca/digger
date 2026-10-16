@@ -157,14 +157,14 @@ export function titleFrame(w: World, frame: number): void {
 	if (frame == 223) drawing.outtext('BONUS', 216, 159, 2)
 }
 
-/** Lives 3/3 or 3/0, both players' levels initialised, scores zeroed; announce only in 2P. */
+/** Lives 5/5 or 5/0, both players' levels initialised, scores zeroed; announce only in 2P. */
 export function startGame(w: World): Playing {
 	const m = w.main
 	m.gamedat[0].level = 1
-	m.gamedat[0].lives = 3
+	m.gamedat[0].lives = 5
 	if (m.nplayers == 2) {
 		m.gamedat[1].level = 1
-		m.gamedat[1].lives = 3
+		m.gamedat[1].lives = 5
 	} else m.gamedat[1].lives = 0
 	w.cga.gclear()
 	m.curplayer = 0
