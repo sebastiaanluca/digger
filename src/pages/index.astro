@@ -1,0 +1,50 @@
+---
+import '../styles/global.css'
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Digger</title>
+		<meta name="description" content="Play the 1983 Windmill Software Digger on a full-page CGA screen." />
+	</head>
+	<body class="m-0 h-dvh overflow-hidden bg-black text-white">
+		<main class="flex h-dvh w-full items-center justify-center">
+			<div
+				id="stage"
+				class="relative flex max-h-full max-w-full items-center justify-center"
+			>
+				<canvas
+					id="digger"
+					width="320"
+					height="200"
+					class="block bg-black focus:outline-none"
+					style="width: min(100vw, 160dvh); height: auto; aspect-ratio: 8 / 5; image-rendering: pixelated;"
+					tabindex="0"
+					aria-label="Digger game. Arrow keys move, Space fires, P pauses, Escape picks one or two players, any key starts."
+				></canvas>
+			</div>
+		</main>
+		<script>
+			import { boot } from '../game/boot'
+
+			let game = boot()
+			// A page restored from the back/forward cache was destroyed on pagehide.
+			const reboot = (e: PageTransitionEvent) => {
+				if (e.persisted) game = boot()
+			}
+			window.addEventListener('pageshow', reboot)
+
+			if (import.meta.hot) {
+				import.meta.hot.accept()
+				import.meta.hot.dispose(() => {
+					window.removeEventListener('pageshow', reboot)
+					game.destroy()
+				})
+			}
+		</script>
+	</body>
+</html>
