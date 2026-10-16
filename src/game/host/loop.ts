@@ -1,8 +1,9 @@
 /** DOS / Futrega tick. Reachable with `-` from the default. */
 export const ORIGINAL_TICK_MS = 1000 / 13
-/** Default: a bit faster than 13 Hz. Jenner steps `ftime` by 10 ms; we do the same to the period. */
-export const DEFAULT_TICK_MS = 1000 / 16
+/** Jenner steps `ftime` by 10 ms; `-` and `=` do the same to the period. */
 export const SPEED_STEP_MS = 10
+/** 16 Hz, then two `=` clicks. */
+export const DEFAULT_TICK_MS = 1000 / 16 - SPEED_STEP_MS * 2
 export const MIN_TICK_MS = 20
 export const MAX_TICK_MS = 200
 /** After a stall, run at most this many ticks and drop the rest instead of fast-forwarding. */

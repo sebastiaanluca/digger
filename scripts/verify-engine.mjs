@@ -27,7 +27,7 @@ export async function resolve(specifier, context, next) {
 const { Engine } = await import('../src/game/engine/engine.ts')
 const { localHiScoreStore, HISCORE_KEY } = await import('../src/game/host/hiscore-store.ts')
 const { parseKeyDown, parseKeyUp } = await import('../src/game/host/keyboard.ts')
-const { DEFAULT_TICK_MS, ORIGINAL_TICK_MS, MIN_TICK_MS, MAX_TICK_MS, adjustTickMs } = await import(
+const { DEFAULT_TICK_MS, ORIGINAL_TICK_MS, SPEED_STEP_MS, MIN_TICK_MS, MAX_TICK_MS, adjustTickMs } = await import(
 	'../src/game/host/loop.ts'
 )
 const { PcSpeaker } = await import('../src/game/audio/pc-speaker.ts')
@@ -270,7 +270,11 @@ const hz = crossings / 2 / ((halfSec.length - 1000) / 48000)
 check('level jingle still playing at 0.5s', energy > 1, `energy=${energy.toFixed(3)}`)
 check('level jingle sits on the PIT melody, not a mixed square', hz > 400 && hz < 800, `hz=${hz.toFixed(1)}`)
 
-check('default tick is faster than DOS 13 Hz', DEFAULT_TICK_MS < ORIGINAL_TICK_MS, `${DEFAULT_TICK_MS} vs ${ORIGINAL_TICK_MS}`)
+check(
+	'default is two speed clicks faster than 16 Hz',
+	DEFAULT_TICK_MS === 1000 / 16 - 2 * SPEED_STEP_MS,
+	`${DEFAULT_TICK_MS}`,
+)
 check('= speeds up', parseKeyDown({ code: 'Equal', key: '=', repeat: false, ctrlKey: false, metaKey: false, altKey: false })[0]?.type === 'Faster')
 check('+ on the numpad speeds up', parseKeyDown({ code: 'NumpadAdd', key: '+', repeat: false, ctrlKey: false, metaKey: false, altKey: false })[0]?.type === 'Faster')
 check('- slows down', parseKeyDown({ code: 'Minus', key: '-', repeat: false, ctrlKey: false, metaKey: false, altKey: false })[0]?.type === 'Slower')
