@@ -59,6 +59,8 @@ export function boot(canvas: HTMLCanvasElement | null = document.querySelector<H
 	const engine = new Engine({ seed: randomSeed(), hiscores: localHiScoreStore(safeLocalStorage()) })
 	const speaker = createSpeaker()
 	let poke = () => {}
+	let faster = () => {}
+	let slower = () => {}
 	const keyboard = attachKeyboard(window, () => speaker.unlock(), () => poke())
 
 	let destroyed = false
@@ -77,7 +79,14 @@ export function boot(canvas: HTMLCanvasElement | null = document.querySelector<H
 	}
 
 	const loop = startLoop(
-		() => engine.tick(keyboard.drain()),
+		() => {
+			const intents = keyboard.drain()
+			for (const i of intents) {
+				if (i.type === 'Faster') faster()
+				else if (i.type === 'Slower') slower()
+			}
+			engine.tick(intents)
+		},
 		() => {
 			presenter.present(engine.frame())
 			speaker.play(engine.takeSoundCues())
@@ -89,6 +98,8 @@ export function boot(canvas: HTMLCanvasElement | null = document.querySelector<H
 		},
 	)
 	poke = () => loop.poke()
+	faster = () => loop.faster()
+	slower = () => loop.slower()
 
 	const onPageHide = () => handle.destroy()
 	const onVisibility = () => {

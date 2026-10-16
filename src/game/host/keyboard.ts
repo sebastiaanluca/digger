@@ -7,6 +7,8 @@ import { toGlyph, type Dir, type Glyph, type Intent } from '../engine/types'
  *   Space, F1                    Fire(held)                   Fire(released)
  *   KeyP                         Pause, Type('P')             —
  *   Escape                       TogglePlayers                —
+ *   Minus, NumpadSubtract        Slower                       —
+ *   Equal, NumpadAdd             Faster                       —
  *   Backspace, Delete            Erase, Start                 —
  *   KeyA–Z, Digit/Numpad 0–9     Start, Type(glyph)           —
  *   any other non-modifier key   Start                        —
@@ -27,6 +29,9 @@ const ARROWS: Readonly<Record<string, Dir>> = {
 }
 
 const FIRE_CODES = new Set(['Space', 'F1'])
+
+const FASTER_CODES = new Set(['Equal', 'NumpadAdd'])
+const SLOWER_CODES = new Set(['Minus', 'NumpadSubtract'])
 
 const IGNORED_CODES = new Set(['Tab', 'F5', 'F11', 'F12'])
 
@@ -71,6 +76,8 @@ export function parseKeyDown(e: KeyLike): readonly Intent[] {
 		return glyph ? [{ type: 'Move', dir, held: true }, { type: 'Type', glyph }] : [{ type: 'Move', dir, held: true }]
 	}
 	if (FIRE_CODES.has(e.code)) return [{ type: 'Fire', held: true }]
+	if (FASTER_CODES.has(e.code) || e.key === '+' || e.key === '=') return [{ type: 'Faster' }]
+	if (SLOWER_CODES.has(e.code) || e.key === '-' || e.key === '_') return [{ type: 'Slower' }]
 	if (e.code === 'Escape') return [{ type: 'TogglePlayers' }]
 	if (e.code === 'Backspace' || e.code === 'Delete') return [{ type: 'Erase' }, { type: 'Start' }]
 	const glyph = glyphOf(e)

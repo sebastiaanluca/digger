@@ -15,6 +15,7 @@ Open the URL Vite prints. The game fills the window and keeps an 8:5 picture.
 - Arrow keys or WASD move.
 - Space or F1 fires.
 - P pauses. Any key resumes.
+- `-` slows the game. `=` or `+` speeds it up. Default is 16 Hz, a step faster than the original 13 Hz.
 
 ## Lineage
 

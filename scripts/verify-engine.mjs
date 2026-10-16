@@ -27,6 +27,9 @@ export async function resolve(specifier, context, next) {
 const { Engine } = await import('../src/game/engine/engine.ts')
 const { localHiScoreStore, HISCORE_KEY } = await import('../src/game/host/hiscore-store.ts')
 const { parseKeyDown, parseKeyUp } = await import('../src/game/host/keyboard.ts')
+const { DEFAULT_TICK_MS, ORIGINAL_TICK_MS, MIN_TICK_MS, MAX_TICK_MS, adjustTickMs } = await import(
+	'../src/game/host/loop.ts'
+)
 const { PcSpeaker } = await import('../src/game/audio/pc-speaker.ts')
 const { CGA_RGB } = await import('../src/game/pc/palette.ts')
 
@@ -255,6 +258,17 @@ speaker.fill(halfSec)
 let energy = 0
 for (let i = 0; i < halfSec.length; i++) energy += halfSec[i] * halfSec[i]
 check('level jingle still playing at 0.5s', energy > 1, `energy=${energy.toFixed(3)}`)
+
+check('default tick is faster than DOS 13 Hz', DEFAULT_TICK_MS < ORIGINAL_TICK_MS, `${DEFAULT_TICK_MS} vs ${ORIGINAL_TICK_MS}`)
+check('= speeds up', parseKeyDown({ code: 'Equal', key: '=', repeat: false, ctrlKey: false, metaKey: false, altKey: false })[0]?.type === 'Faster')
+check('+ on the numpad speeds up', parseKeyDown({ code: 'NumpadAdd', key: '+', repeat: false, ctrlKey: false, metaKey: false, altKey: false })[0]?.type === 'Faster')
+check('- slows down', parseKeyDown({ code: 'Minus', key: '-', repeat: false, ctrlKey: false, metaKey: false, altKey: false })[0]?.type === 'Slower')
+check('= does not start the game', !parseKeyDown({ code: 'Equal', key: '=', repeat: false, ctrlKey: false, metaKey: false, altKey: false }).some((i) => i.type === 'Start'))
+const faster = adjustTickMs(DEFAULT_TICK_MS, false)
+const slower = adjustTickMs(DEFAULT_TICK_MS, true)
+check('one + step shortens the period', faster < DEFAULT_TICK_MS)
+check('one - step lengthens the period toward DOS 13 Hz', slower > DEFAULT_TICK_MS && slower < ORIGINAL_TICK_MS + 5)
+check('period stays inside the caps', adjustTickMs(MIN_TICK_MS, false) === MIN_TICK_MS && adjustTickMs(MAX_TICK_MS, true) === MAX_TICK_MS)
 
 console.log(`\nsnapshots in ${outDir}`)
 console.log(failures === 0 ? 'all checks passed' : `${failures} check(s) failed`)

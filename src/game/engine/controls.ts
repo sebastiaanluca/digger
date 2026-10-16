@@ -57,6 +57,13 @@ export class Controls {
 			case 'Pause':
 				this.pausef = true
 				break
+			case 'Faster':
+			case 'Slower':
+			case 'Start':
+			case 'TogglePlayers':
+			case 'Type':
+			case 'Erase':
+				break
 		}
 	}
 

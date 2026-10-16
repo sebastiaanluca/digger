@@ -52,6 +52,8 @@ export type Intent =
 	| { readonly type: 'TogglePlayers' }
 	| { readonly type: 'Type'; readonly glyph: Glyph }
 	| { readonly type: 'Erase' }
+	| { readonly type: 'Faster' }
+	| { readonly type: 'Slower' }
 
 /**
  * "Any key" on the title and while paused. Pause is excluded because window blur also queues
@@ -69,6 +71,8 @@ export function isPress(i: Intent): boolean {
 			return true
 		case 'Pause':
 		case 'TogglePlayers':
+		case 'Faster':
+		case 'Slower':
 			return false
 	}
 }
