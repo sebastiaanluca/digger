@@ -160,6 +160,9 @@ export class PcSpeaker {
 
 	/** PIT ticks per output sample (Futrega truncated this; the fraction keeps the tempo exact). */
 	private readonly rate: number
+	/** Jenner newsnd.c: soundint, including the level jingle, at round(sampleRate / 72.8). */
+	private readonly levdoneEvery: number
+	private levdoneCount = 0
 	private t0rate = 0
 	private t2rate = 0
 	private t0v = 0
@@ -171,6 +174,7 @@ export class PcSpeaker {
 
 	constructor(sampleRate: number, seed = 0x2468ace) {
 		this.rate = PIT_HZ / sampleRate
+		this.levdoneEvery = Math.max(1, Math.round(sampleRate / (PIT_HZ / 0x4000)))
 		this.randv = seed & 0x7fffffff
 		this.initsound()
 	}
@@ -255,7 +259,18 @@ export class PcSpeaker {
 	}
 
 	fill(out: Float32Array): void {
-		for (let i = 0; i < out.length; i++) out[i] = this.getsample2()
+		for (let i = 0; i < out.length; i++) {
+			out[i] = this.getsample2()
+			if (!this.soundlevdoneflag) {
+				this.levdoneCount = 0
+				continue
+			}
+			this.levdoneCount++
+			if (this.levdoneCount >= this.levdoneEvery) {
+				this.levdoneCount = 0
+				this.soundlevdoneupdate()
+			}
+		}
 	}
 
 	private randno(n: number): number {
@@ -671,14 +686,13 @@ export class PcSpeaker {
 			}
 			this.sett2val(this.t2val)
 		}
-		// C ran soundlevdoneupdate() from a loop keyed on this interrupt; Futrega left it out.
-		if (this.soundlevdoneflag) this.soundlevdoneupdate()
 	}
 
 	private soundlevdone(): void {
 		this.soundstop()
 		this.nljpointer = 0
 		this.nljnoteduration = 20
+		this.levdoneCount = 0
 		this.soundlevdoneflag = this.soundpausedflag = true
 	}
 

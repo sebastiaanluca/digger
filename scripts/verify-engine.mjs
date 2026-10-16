@@ -26,6 +26,8 @@ export async function resolve(specifier, context, next) {
 
 const { Engine } = await import('../src/game/engine/engine.ts')
 const { localHiScoreStore, HISCORE_KEY } = await import('../src/game/host/hiscore-store.ts')
+const { parseKeyDown, parseKeyUp } = await import('../src/game/host/keyboard.ts')
+const { PcSpeaker } = await import('../src/game/audio/pc-speaker.ts')
 const { CGA_RGB } = await import('../src/game/pc/palette.ts')
 
 const outDir = process.argv[2] ?? join(tmpdir(), 'digger-verify')
@@ -222,6 +224,37 @@ if (engine.phase === 'gameover') {
 	check('"GAME OVER" on the top line', inkIn(104, 0, 108, 12) > 0)
 	saveBmp('09-game-over')
 }
+
+// ── WASD and the original 72.8 Hz level jingle ──────────────────────────────
+const wDown = parseKeyDown({ code: 'KeyW', key: 'w', repeat: false, ctrlKey: false, metaKey: false, altKey: false })
+check(
+	'W moves up',
+	wDown.some((i) => i.type === 'Move' && i.dir === 2 && i.held) && wDown.some((i) => i.type === 'Type' && i.glyph === 'W'),
+)
+check(
+	'A S D match left down right',
+	parseKeyDown({ code: 'KeyA', key: 'a', repeat: false, ctrlKey: false, metaKey: false, altKey: false }).some(
+		(i) => i.type === 'Move' && i.dir === 4 && i.held,
+	) &&
+		parseKeyDown({ code: 'KeyS', key: 's', repeat: false, ctrlKey: false, metaKey: false, altKey: false }).some(
+			(i) => i.type === 'Move' && i.dir === 6 && i.held,
+		) &&
+		parseKeyDown({ code: 'KeyD', key: 'd', repeat: false, ctrlKey: false, metaKey: false, altKey: false }).some(
+			(i) => i.type === 'Move' && i.dir === 0 && i.held,
+		),
+)
+check(
+	'W keyup releases up',
+	parseKeyUp({ code: 'KeyW' }).some((i) => i.type === 'Move' && i.dir === 2 && !i.held),
+)
+
+const speaker = new PcSpeaker(48000)
+speaker.apply({ cue: 'levelDone' })
+const halfSec = new Float32Array(24000)
+speaker.fill(halfSec)
+let energy = 0
+for (let i = 0; i < halfSec.length; i++) energy += halfSec[i] * halfSec[i]
+check('level jingle still playing at 0.5s', energy > 1, `energy=${energy.toFixed(3)}`)
 
 console.log(`\nsnapshots in ${outDir}`)
 console.log(failures === 0 ? 'all checks passed' : `${failures} check(s) failed`)

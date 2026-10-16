@@ -58,7 +58,8 @@ export function boot(canvas: HTMLCanvasElement | null = document.querySelector<H
 
 	const engine = new Engine({ seed: randomSeed(), hiscores: localHiScoreStore(safeLocalStorage()) })
 	const speaker = createSpeaker()
-	const keyboard = attachKeyboard(window, () => speaker.unlock())
+	let poke = () => {}
+	const keyboard = attachKeyboard(window, () => speaker.unlock(), () => poke())
 
 	let destroyed = false
 	const handle: GameHandle = {
@@ -87,6 +88,7 @@ export function boot(canvas: HTMLCanvasElement | null = document.querySelector<H
 			handle.destroy()
 		},
 	)
+	poke = () => loop.poke()
 
 	const onPageHide = () => handle.destroy()
 	const onVisibility = () => {

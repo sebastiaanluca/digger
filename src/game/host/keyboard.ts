@@ -3,6 +3,7 @@ import { toGlyph, type Dir, type Glyph, type Intent } from '../engine/types'
 /*
  *   code                         keydown                      keyup
  *   ArrowRight/Up/Left/Down      Move(dir, held)              Move(dir, released)
+ *   KeyW/A/S/D                   Move(dir, held), Type        Move(dir, released)
  *   Space, F1                    Fire(held)                   Fire(released)
  *   KeyP                         Pause, Type('P')             —
  *   Escape                       TogglePlayers                —
@@ -19,6 +20,10 @@ const ARROWS: Readonly<Record<string, Dir>> = {
 	ArrowUp: 2,
 	ArrowLeft: 4,
 	ArrowDown: 6,
+	KeyD: 0,
+	KeyW: 2,
+	KeyA: 4,
+	KeyS: 6,
 }
 
 const FIRE_CODES = new Set(['Space', 'F1'])
@@ -61,7 +66,10 @@ export function parseKeyDown(e: KeyLike): readonly Intent[] {
 	if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return []
 	if (IGNORED_CODES.has(e.code) || MODIFIER_KEYS.has(e.key)) return []
 	const dir = ARROWS[e.code]
-	if (dir !== undefined) return [{ type: 'Move', dir, held: true }]
+	if (dir !== undefined) {
+		const glyph = glyphOf(e)
+		return glyph ? [{ type: 'Move', dir, held: true }, { type: 'Type', glyph }] : [{ type: 'Move', dir, held: true }]
+	}
 	if (FIRE_CODES.has(e.code)) return [{ type: 'Fire', held: true }]
 	if (e.code === 'Escape') return [{ type: 'TogglePlayers' }]
 	if (e.code === 'Backspace' || e.code === 'Delete') return [{ type: 'Erase' }, { type: 'Start' }]
@@ -89,9 +97,10 @@ export interface Keyboard {
  * `onGesture` runs on keydowns so the speaker can start audio inside a user gesture.
  * Window blur queues releases for everything held, then Pause, so keys cannot stick.
  */
-export function attachKeyboard(target: Window, onGesture: () => void): Keyboard {
+export function attachKeyboard(target: Window, onGesture: () => void, onPoke?: () => void): Keyboard {
 	let queue: Intent[] = []
 	const held = new Set<string>()
+	const listen = { capture: true } as const
 
 	const onKeyDown = (e: KeyboardEvent) => {
 		const intents = parseKeyDown(e)
@@ -101,7 +110,10 @@ export function attachKeyboard(target: Window, onGesture: () => void): Keyboard 
 			return
 		}
 		e.preventDefault()
-		if (isGameKey(e.code)) held.add(e.code)
+		if (isGameKey(e.code)) {
+			held.add(e.code)
+			onPoke?.()
+		}
 		queue.push(...intents)
 		onGesture()
 	}
@@ -120,8 +132,8 @@ export function attachKeyboard(target: Window, onGesture: () => void): Keyboard 
 		queue.push({ type: 'Pause' })
 	}
 
-	target.addEventListener('keydown', onKeyDown)
-	target.addEventListener('keyup', onKeyUp)
+	target.addEventListener('keydown', onKeyDown, listen)
+	target.addEventListener('keyup', onKeyUp, listen)
 	target.addEventListener('blur', onBlur)
 
 	return {
@@ -131,8 +143,8 @@ export function attachKeyboard(target: Window, onGesture: () => void): Keyboard 
 			return out
 		},
 		dispose() {
-			target.removeEventListener('keydown', onKeyDown)
-			target.removeEventListener('keyup', onKeyUp)
+			target.removeEventListener('keydown', onKeyDown, listen)
+			target.removeEventListener('keyup', onKeyUp, listen)
 			target.removeEventListener('blur', onBlur)
 			queue = []
 			held.clear()

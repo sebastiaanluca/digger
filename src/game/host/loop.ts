@@ -5,6 +5,8 @@ export const MAX_CATCH_UP = 4
 
 export interface Loop {
 	stop(): void
+	/** Run the next tick on this animation frame instead of waiting out the 13 Hz period. */
+	poke(): void
 }
 
 /**
@@ -17,12 +19,16 @@ export function startLoop(tick: () => void, present: () => void, onError: (err: 
 	let last = performance.now()
 	let raf = 0
 	let running = true
+	let poked = false
 
 	const frame = (t: number) => {
 		if (!running) return
 		const dt = t - last
 		last = t
-		if (dt > 0) acc = Math.min(acc + dt, TICK_MS * MAX_CATCH_UP)
+		if (poked) {
+			poked = false
+			acc = TICK_MS
+		} else if (dt > 0) acc = Math.min(acc + dt, TICK_MS * MAX_CATCH_UP)
 		try {
 			while (acc >= TICK_MS) {
 				acc -= TICK_MS
@@ -50,6 +56,9 @@ export function startLoop(tick: () => void, present: () => void, onError: (err: 
 			running = false
 			cancelAnimationFrame(raf)
 			doc.removeEventListener('visibilitychange', onVisibility)
+		},
+		poke() {
+			poked = true
 		},
 	}
 }

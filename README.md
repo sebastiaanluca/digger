@@ -12,7 +12,7 @@ pnpm dev
 Open the URL Vite prints. The game fills the window and keeps an 8:5 picture.
 
 - Any key starts from the title. Esc switches one and two player.
-- Arrow keys move.
+- Arrow keys or WASD move.
 - Space or F1 fires.
 - P pauses. Any key resumes.
 
