@@ -9,7 +9,8 @@
  * Ported from digjs/src/Input.js. The DOM side lives in host/keyboard.ts; intents are folded
  * here in arrival order at the start of each tick, which reproduces processkey(): a tap that is
  * pressed and released between two readdir() calls still moves the digger once (staticdir),
- * and releasing one arrow falls back to another held one (setdirec).
+ * and releasing one arrow falls back to another held one (setdirec). A turn tap also latches
+ * queuedir until updatedigger can apply it on a cell, so a poke mid-cell does not eat it.
  */
 
 import type { Intent } from './types'
@@ -23,6 +24,7 @@ export class Controls {
 	private firepressed = false
 	private dynamicdir = -1
 	private staticdir = -1
+	private queuedir = -1
 	private keydir = 0
 	private firepflag = false
 	/** C's pausef: latched until a live tick takes it. */
@@ -68,7 +70,7 @@ export class Controls {
 	}
 
 	detectjoy(): void {
-		this.staticdir = this.dynamicdir = -1
+		this.staticdir = this.dynamicdir = this.queuedir = -1
 	}
 
 	getdir(): number {
@@ -91,6 +93,14 @@ export class Controls {
 		this.firepflag = false
 	}
 
+	clearQueuedDir(): void {
+		this.queuedir = -1
+	}
+
+	consumeQueuedDir(dir: number): void {
+		if (this.queuedir == dir) this.queuedir = -1
+	}
+
 	takePause(): boolean {
 		const p = this.pausef
 		this.pausef = false
@@ -100,6 +110,7 @@ export class Controls {
 	readdir(): void {
 		this.keydir = this.staticdir
 		if (this.dynamicdir != -1) this.keydir = this.dynamicdir
+		if (this.queuedir != -1) this.keydir = this.queuedir
 		this.staticdir = -1
 		if (this.f1pressed || this.firepressed) this.firepflag = true
 		else this.firepflag = false
@@ -116,7 +127,7 @@ export class Controls {
 
 	private Key_downpressed(): void {
 		this.downpressed = true
-		this.dynamicdir = this.staticdir = 6
+		this.dynamicdir = this.staticdir = this.queuedir = 6
 	}
 	private Key_downreleased(): void {
 		this.downpressed = false
@@ -131,7 +142,7 @@ export class Controls {
 	}
 	private Key_leftpressed(): void {
 		this.leftpressed = true
-		this.dynamicdir = this.staticdir = 4
+		this.dynamicdir = this.staticdir = this.queuedir = 4
 	}
 	private Key_leftreleased(): void {
 		this.leftpressed = false
@@ -139,7 +150,7 @@ export class Controls {
 	}
 	private Key_rightpressed(): void {
 		this.rightpressed = true
-		this.dynamicdir = this.staticdir = 0
+		this.dynamicdir = this.staticdir = this.queuedir = 0
 	}
 	private Key_rightreleased(): void {
 		this.rightpressed = false
@@ -147,7 +158,7 @@ export class Controls {
 	}
 	private Key_uppressed(): void {
 		this.uppressed = true
-		this.dynamicdir = this.staticdir = 2
+		this.dynamicdir = this.staticdir = this.queuedir = 2
 	}
 	private Key_upreleased(): void {
 		this.uppressed = false

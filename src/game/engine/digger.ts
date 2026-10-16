@@ -271,6 +271,7 @@ export class Digger {
 		this.emn = 0
 		this.bonusvisible = this.bonusmode = false
 		this.w.controls.clearFire()
+		this.w.controls.clearQueuedDir()
 		this.expsn = 0
 		this.rechargetime = 0
 	}
@@ -317,8 +318,14 @@ export class Digger {
 		const dir = controls.getdir()
 		if (dir == 0 || dir == 2 || dir == 4 || dir == 6) ddir = dir
 		else ddir = -1
-		if (this.diggerrx == 0 && (ddir == 2 || ddir == 6)) this.digdir = this.digmdir = ddir
-		if (this.diggerry == 0 && (ddir == 4 || ddir == 0)) this.digdir = this.digmdir = ddir
+		if (this.diggerrx == 0 && (ddir == 2 || ddir == 6)) {
+			this.digdir = this.digmdir = ddir
+			controls.consumeQueuedDir(ddir)
+		}
+		if (this.diggerry == 0 && (ddir == 4 || ddir == 0)) {
+			this.digdir = this.digmdir = ddir
+			controls.consumeQueuedDir(ddir)
+		}
 		if (dir == -1) this.digmdir = -1
 		else this.digmdir = this.digdir
 		if (

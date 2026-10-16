@@ -153,9 +153,28 @@ check('a new Space press still fires', cues.some((c) => c.cue === 'fire'))
 check('level 1 with 5 lives', w.main.gamedat[0].level === 1 && w.main.gamedat[0].lives === 5)
 saveBmp('03-level1')
 
+const y0 = w.digger.diggery
+tick([{ type: 'Move', dir: 0, held: true }])
+ticks(2)
+tick([{ type: 'Move', dir: 0, held: false }])
+const xMid = w.digger.diggerx
+check('right leaves the cell', (w.digger.diggerx - 12) % 20 !== 0, `rx=${(w.digger.diggerx - 12) % 20}`)
+tick([{ type: 'Move', dir: 4, held: true }])
+ticks(4)
+tick([{ type: 'Move', dir: 4, held: false }])
+check('reverse on the row does not wait for a cell', w.digger.diggerx < xMid, `${xMid} -> ${w.digger.diggerx}`)
+
+tick([{ type: 'Move', dir: 0, held: true }])
+ticks(2)
+tick([{ type: 'Move', dir: 2, held: true }])
+tick([{ type: 'Move', dir: 2, held: false }])
+ticks(10)
+tick([{ type: 'Move', dir: 0, held: false }])
+check('a mid-cell up tap turns at the next cell', w.digger.diggery < y0, `${y0} -> ${w.digger.diggery}`)
+
 const x0 = w.digger.diggerx
 tick([{ type: 'Move', dir: 4, held: true }])
-ticks(10)
+ticks(14)
 tick([{ type: 'Move', dir: 4, held: false }])
 check('arrow moves the digger', w.digger.diggerx < x0, `${x0} -> ${w.digger.diggerx}`)
 
