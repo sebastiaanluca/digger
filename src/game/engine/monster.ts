@@ -106,10 +106,8 @@ export class Monsters {
 					}
 				}
 				if (mondat[i].alive)
-					if (mondat[i].t == 0) {
-						this.monai(i)
-						if (main.randno(15 - main.levof10()) == 0 && mondat[i].nob) this.monai(i)
-					} else mondat[i].t--
+					if (mondat[i].t == 0) this.monai(i) /* one step; original sometimes rolled a second */
+					else mondat[i].t--
 				else this.mondie(i)
 			}
 	}

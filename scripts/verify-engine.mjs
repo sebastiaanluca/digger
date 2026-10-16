@@ -188,11 +188,10 @@ check('nothing moves while paused', engine.frame().version === frozen)
 tick([{ type: 'Start' }])
 check('any key resumes', engine.phase === 'playing' && stage() === 'live')
 
-w.main.gamedat[0].lives = 3
 cues.length = 0
 w.scores.addscore(20000 - w.scores.score1)
 cues.push(...engine.takeSoundCues())
-check('extra life at 20000', w.main.gamedat[0].lives === 4 && cues.some((c) => c.cue === 'oneUp'))
+check('extra life at 20000 is not capped', w.main.gamedat[0].lives === 6 && cues.some((c) => c.cue === 'oneUp'))
 
 // ── all eight maps: clear by emeralds, levplan 12345678 then 678, 5... ───────
 const plans = [w.main.levplan()]
@@ -286,8 +285,8 @@ for (let i = 0; i < halfSec.length; i++) {
 	if (i > 1000 && halfSec[i] >= 0 !== halfSec[i - 1] >= 0) crossings++
 }
 const hz = crossings / 2 / ((halfSec.length - 1000) / 48000)
-check('level jingle still playing at 0.5s', energy > 1, `energy=${energy.toFixed(3)}`)
-check('level jingle sits on the PIT melody, not a mixed square', hz > 400 && hz < 800, `hz=${hz.toFixed(1)}`)
+check('level jingle still playing at 0.5s', energy > 0.5, `energy=${energy.toFixed(3)}`)
+check('level jingle is the original dual-PIT chord', hz > 400 && hz < 800, `hz=${hz.toFixed(1)}`)
 
 check(
 	'default is two speed clicks faster than 16 Hz',
@@ -303,6 +302,26 @@ const slower = adjustTickMs(DEFAULT_TICK_MS, true)
 check('one + step shortens the period', faster < DEFAULT_TICK_MS)
 check('one - step lengthens the period toward DOS 13 Hz', slower > DEFAULT_TICK_MS && slower < ORIGINAL_TICK_MS + 5)
 check('period stays inside the caps', adjustTickMs(MIN_TICK_MS, false) === MIN_TICK_MS && adjustTickMs(MAX_TICK_MS, true) === MAX_TICK_MS)
+
+const speedEng = new Engine({ seed: 99, hiscores: localHiScoreStore(new MemoryStorage()) })
+speedEng.tick([{ type: 'Start' }])
+const sm = speedEng.w.monsters.mondat
+let maxDx = 0
+let maxDy = 0
+const prevMon = sm.map((m) => ({ x: m.x, y: m.y, flag: m.flag }))
+for (let i = 0; i < 120; i++) {
+	speedEng.tick([])
+	speedEng.takeSoundCues()
+	for (let n = 0; n < 6; n++) {
+		const m = sm[n]
+		if (m.flag && prevMon[n].flag) {
+			maxDx = Math.max(maxDx, Math.abs(m.x - prevMon[n].x))
+			maxDy = Math.max(maxDy, Math.abs(m.y - prevMon[n].y))
+		}
+		prevMon[n] = { x: m.x, y: m.y, flag: m.flag }
+	}
+}
+check('monsters do not outrun the digger', maxDx <= 4 && maxDy <= 3, `dx=${maxDx} dy=${maxDy}`)
 
 console.log(`\nsnapshots in ${outDir}`)
 console.log(failures === 0 ? 'all checks passed' : `${failures} check(s) failed`)

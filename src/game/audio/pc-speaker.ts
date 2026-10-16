@@ -168,6 +168,8 @@ export class PcSpeaker {
 	private t0v = 0
 	private t2v = 0
 	private t2sw = false
+	private lev0ph = 0
+	private lev2ph = 0
 
 	/** Fire noise used the game's randno in Futrega, from the audio thread; it has its own here. */
 	private randv: number
@@ -693,7 +695,10 @@ export class PcSpeaker {
 		this.nljpointer = 0
 		this.nljnoteduration = 20
 		this.levdoneCount = 0
+		this.lev0ph = 0
+		this.lev2ph = 0
 		this.soundlevdoneflag = this.soundpausedflag = true
+		this.soundlevdoneupdate()
 	}
 
 	private soundlevdoneoff(): void {
@@ -705,11 +710,9 @@ export class PcSpeaker {
 			if (this.nljpointer < 11) this.t2val = newlevjingle[this.nljpointer]
 			this.t0val = this.t2val + 35
 			this.musvol = 50
-			this.wavetype = 1
 			this.setsoundmode()
 			this.sett0()
-			this.t2rate = 0
-			this.setspkrt2()
+			this.sett2val(this.t2val)
 			if (this.nljnoteduration > 0) this.nljnoteduration--
 			else {
 				this.nljnoteduration = 20
@@ -812,9 +815,8 @@ export class PcSpeaker {
 		this.t2sw = false
 	}
 
-	/** Jenner s1setspkrt2: PWM (spkrmode 1) is timer 0 only. Mixing timer 2 there is a shrill extra square. */
 	private setspkrt2(): void {
-		this.t2sw = this.spkrmode == 0
+		this.t2sw = true
 	}
 
 	private settimer0(t0: number): void {
@@ -841,11 +843,18 @@ export class PcSpeaker {
 			}
 		}
 		this.t2v = (this.t2v + this.t2rate) % 65536
-		if (this.spkrmode != 0) {
-			const duty = this.pulsewidth * (this.soundlevdoneflag ? 655 : 63)
-			if (this.t0v > duty) t0 = -32767
-			else t0 = 32767
+		if (this.soundlevdoneflag) {
+			const sr = PIT_HZ / this.rate
+			const f0 = this.t0val > 40 ? PIT_HZ / this.t0val : 0
+			const f2 = this.t2val > 40 ? PIT_HZ / this.t2val : 0
+			this.lev0ph = (this.lev0ph + f0 / sr) % 1
+			this.lev2ph = (this.lev2ph + f2 / sr) % 1
+			const s = (Math.sin(this.lev0ph * 2 * Math.PI) + Math.sin(this.lev2ph * 2 * Math.PI)) * 0.5
+			return s * MAX_SAMP
 		}
+		if (this.spkrmode != 0)
+			if (this.t0v > this.pulsewidth * 63) t0 = -32767
+			else t0 = 32767
 		if (this.t2rate != 0 && this.t2sw) {
 			if (this.t2v > 32767) t2 = -32767
 			else t2 = 32767

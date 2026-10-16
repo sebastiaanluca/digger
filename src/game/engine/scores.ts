@@ -39,10 +39,8 @@ export class Scores {
 			if (this.score1 > 999999) this.score1 = 0
 			this.writenum(this.score1, 0, 0, 6, 1)
 			if (this.score1 >= this.nextbs1) {
-				if (main.getlives(1) < 5) {
-					main.addlife(1)
-					drawing.drawlives()
-				}
+				main.addlife(1)
+				drawing.drawlives()
 				this.nextbs1 += this.bonusscore
 			}
 		} else {
@@ -52,10 +50,8 @@ export class Scores {
 			else this.writenum(this.score2, 248, 0, 6, 1)
 			if (this.score2 > this.nextbs2) {
 				/* Player 2 doesn't get the life until >20,000 ! */
-				if (main.getlives(2) < 5) {
-					main.addlife(2)
-					drawing.drawlives()
-				}
+				main.addlife(2)
+				drawing.drawlives()
 				this.nextbs2 += this.bonusscore
 			}
 		}
