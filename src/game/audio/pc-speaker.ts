@@ -705,9 +705,11 @@ export class PcSpeaker {
 			if (this.nljpointer < 11) this.t2val = newlevjingle[this.nljpointer]
 			this.t0val = this.t2val + 35
 			this.musvol = 50
+			this.wavetype = 1
 			this.setsoundmode()
 			this.sett0()
-			this.sett2val(this.t2val)
+			this.t2rate = 0
+			this.setspkrt2()
 			if (this.nljnoteduration > 0) this.nljnoteduration--
 			else {
 				this.nljnoteduration = 20
@@ -810,8 +812,9 @@ export class PcSpeaker {
 		this.t2sw = false
 	}
 
+	/** Jenner s1setspkrt2: PWM (spkrmode 1) is timer 0 only. Mixing timer 2 there is a shrill extra square. */
 	private setspkrt2(): void {
-		this.t2sw = true
+		this.t2sw = this.spkrmode == 0
 	}
 
 	private settimer0(t0: number): void {
@@ -838,9 +841,11 @@ export class PcSpeaker {
 			}
 		}
 		this.t2v = (this.t2v + this.t2rate) % 65536
-		if (this.spkrmode != 0)
-			if (this.t0v > this.pulsewidth * 63) t0 = -32767
+		if (this.spkrmode != 0) {
+			const duty = this.pulsewidth * (this.soundlevdoneflag ? 655 : 63)
+			if (this.t0v > duty) t0 = -32767
 			else t0 = 32767
+		}
 		if (this.t2rate != 0 && this.t2sw) {
 			if (this.t2v > 32767) t2 = -32767
 			else t2 = 32767

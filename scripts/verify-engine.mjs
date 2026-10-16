@@ -261,8 +261,14 @@ speaker.apply({ cue: 'levelDone' })
 const halfSec = new Float32Array(24000)
 speaker.fill(halfSec)
 let energy = 0
-for (let i = 0; i < halfSec.length; i++) energy += halfSec[i] * halfSec[i]
+let crossings = 0
+for (let i = 0; i < halfSec.length; i++) {
+	energy += halfSec[i] * halfSec[i]
+	if (i > 1000 && halfSec[i] >= 0 !== halfSec[i - 1] >= 0) crossings++
+}
+const hz = crossings / 2 / ((halfSec.length - 1000) / 48000)
 check('level jingle still playing at 0.5s', energy > 1, `energy=${energy.toFixed(3)}`)
+check('level jingle sits on the PIT melody, not a mixed square', hz > 400 && hz < 800, `hz=${hz.toFixed(1)}`)
 
 check('default tick is faster than DOS 13 Hz', DEFAULT_TICK_MS < ORIGINAL_TICK_MS, `${DEFAULT_TICK_MS} vs ${ORIGINAL_TICK_MS}`)
 check('= speeds up', parseKeyDown({ code: 'Equal', key: '=', repeat: false, ctrlKey: false, metaKey: false, altKey: false })[0]?.type === 'Faster')
