@@ -175,8 +175,9 @@ export function startGame(w: World): Playing {
 	w.digger.bonusvisible = true
 	m.flashplayer = m.nplayers == 2
 	m.curplayer = 0
-	// The key that started the game may have been P; it must not pause the first round.
+	// The key that started the game may have been P or Space; it must not pause or shoot.
 	w.controls.takePause()
+	w.controls.releaseFire()
 	m.gamedat[0].dead = false
 	return startRound(w)
 }

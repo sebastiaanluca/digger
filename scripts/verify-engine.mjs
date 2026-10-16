@@ -136,10 +136,21 @@ tick([{ type: 'TogglePlayers' }])
 check('Esc switches back to ONE PLAYER', w.main.nplayers === 1)
 
 // ── one player: start, dig, fire, pause ─────────────────────────────────────
-tick([{ type: 'Start' }])
+cues.length = 0
+tick([{ type: 'Fire', held: true }])
 check('any key starts', engine.phase === 'playing' && stage() === 'live')
-check('level 1 with 3 lives', w.main.gamedat[0].level === 1 && w.main.gamedat[0].lives === 3)
+check('Space on the title does not fire', !cues.some((c) => c.cue === 'fire'))
 check('Popcorn starts', cues.some((c) => c.cue === 'music' && c.tune === 1))
+cues.length = 0
+ticks(2)
+check('held Space after start still does not fire', !cues.some((c) => c.cue === 'fire'))
+tick([{ type: 'Fire', held: false }])
+cues.length = 0
+tick([{ type: 'Fire', held: true }])
+tick([{ type: 'Fire', held: false }])
+ticks(2)
+check('a new Space press still fires', cues.some((c) => c.cue === 'fire'))
+check('level 1 with 3 lives', w.main.gamedat[0].level === 1 && w.main.gamedat[0].lives === 3)
 saveBmp('03-level1')
 
 const x0 = w.digger.diggerx
@@ -147,12 +158,6 @@ tick([{ type: 'Move', dir: 4, held: true }])
 ticks(10)
 tick([{ type: 'Move', dir: 4, held: false }])
 check('arrow moves the digger', w.digger.diggerx < x0, `${x0} -> ${w.digger.diggerx}`)
-
-cues.length = 0
-tick([{ type: 'Fire', held: true }])
-tick([{ type: 'Fire', held: false }])
-ticks(3)
-check('Space fires', cues.some((c) => c.cue === 'fire'))
 
 tick([{ type: 'Pause' }, { type: 'Type', glyph: 'P' }])
 check('P pauses', engine.phase === 'paused')

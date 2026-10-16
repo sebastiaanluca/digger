@@ -84,6 +84,13 @@ export class Controls {
 		this.firepressed = false
 	}
 
+	/** Drop a Space that started the game so the first live tick does not shoot. */
+	releaseFire(): void {
+		this.f1pressed = false
+		this.firepressed = false
+		this.firepflag = false
+	}
+
 	takePause(): boolean {
 		const p = this.pausef
 		this.pausef = false
